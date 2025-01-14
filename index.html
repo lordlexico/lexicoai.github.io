@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEXICO AI</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: black;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: white;
+    }
+
+    /* Chat Container */
+    .chat-container {
+      display: none;
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+      border-radius: 5px;
+      height: 400px;
+      overflow-y: scroll;
+      background-color: #222;
+    }
+
+    .chat-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+      background-color: #444;
+      border-radius: 4px;
+    }
+
+    /* Message Box Styles */
+    .message {
+      display: flex;
+      margin: 10px;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .message.bot {
+      justify-content: flex-start;
+    }
+
+    .message-box {
+      max-width: 70%;
+      padding: 10px;
+      border-radius: 15px;
+      word-wrap: break-word;
+    }
+
+    .message.user .message-box {
+      background-color: blue;
+      color: white;
+      border-top-right-radius: 0;
+    }
+
+    .message.bot .message-box {
+      background-color: #333;
+      color: lightgreen;
+      border-top-left-radius: 0;
+    }
+
+    /* Input Container */
+    .input-container {
+      display: none;
+      width: 90%;
+      max-width: 600px;
+      margin: 10px auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 5px;
+      background-color: #444;
+      color: white;
+    }
+
+    input[type="text"]::placeholder {
+      color: #bbb;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: blue;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: darkblue;
+    }
+  </style>
+</head>
+<body>
+  <h2>LEXICO AI</h2>
+  <!-- Chat Screen -->
+  <div class="chat-container" id="chat-container"></div>
+  <div class="input-container" id="input-container">
+    <input type="text" id="user-input" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    // Show the chat interface (for demo purposes)
+    window.onload = function () {
+      document.getElementById("chat-container").style.display = "block";
+      document.getElementById("input-container").style.display = "flex";
+    };
+
+    // Send a message to the chatbot
+    async function sendMessage() {
+      const input = document.getElementById("user-input").value;
+      const chatContainer = document.getElementById("chat-container");
+
+      if (!input) {
+        alert("Please type a message.");
+        return;
+      }
+
+      // Add user's message to chat
+      chatContainer.innerHTML += `
+        <div class="message user">
+          <div class="message-box">${input}</div>
+        </div>`;
+      document.getElementById("user-input").value = "";
+
+      // Show loading circle
+      const loadingCircle = document.createElement("div");
+      loadingCircle.className = "message bot";
+      loadingCircle.innerHTML = `<div class="message-box">...</div>`;
+      chatContainer.appendChild(loadingCircle);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        // Send user input to the backend
+        const response = await fetch("http://localhost:5000/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: input }),
+        });
+
+        const data = await response.json();
+        const botResponse = data.message || "Sorry, something went wrong.";
+
+        // Remove loading circle and add bot's response
+        chatContainer.removeChild(loadingCircle);
+        chatContainer.innerHTML += `
+          <div class="message bot">
+            <div class="message-box">${botResponse}</div>
+          </div>`;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      } catch (error) {
+        console.error("Error:", error);
+        chatContainer.removeChild(loadingCircle);
+        chatContainer.innerHTML += `
+          <div class="message bot">
+            <div class="message-box">SOMETHING WENT WRONG!! --try connecting to a network or refreshing.</div>
+          </div>`;
+      }
+    }
+  </script>
+</body>
+</html>
